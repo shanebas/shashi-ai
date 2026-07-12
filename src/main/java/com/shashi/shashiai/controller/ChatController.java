@@ -63,6 +63,7 @@ public class ChatController {
     /**
      * Simple record to hold a chat request with a system prompt and user message.
      */
-    public record ChatRequest(String systemPrompt, String userMessage) {}
+    public record ChatRequest(String systemPrompt, String userMessage) {
+    }
 
 }

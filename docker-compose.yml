@@ -1,0 +1,19 @@
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    ports:
+      - "11435:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    restart: unless-stopped
+
+  ollama-pull-model:
+    image: curlimages/curl:latest
+    container_name: ollama-pull-model
+    depends_on:
+      - ollama
+    entrypoint: [ "sh", "-c", "until curl -s http://ollama:11434/api/tags; do sleep 2; done; echo 'Ollama ready, pulling gemma3 model...'; curl -X POST http://ollama:11434/api/pull -d '{\"model\": \"gemma3\"}'" ]
+
+volumes:
+  ollama_data:
