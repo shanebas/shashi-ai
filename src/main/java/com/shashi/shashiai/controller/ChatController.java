@@ -1,6 +1,7 @@
 package com.shashi.shashiai.controller;
 
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.web.bind.annotation.*;
 
@@ -30,14 +31,17 @@ public class ChatController {
      *
      * @param message the user's input message
      * @param provider the AI provider to use ("ollama" or "openai")
+     * @param chatId the session identifier for chat memory
      * @return the AI-generated response as a plain string
      */
     @GetMapping
     public String chat(
             @RequestParam String message,
-            @RequestParam(required = false, defaultValue = "ollama") String provider) {
+            @RequestParam(required = false, defaultValue = "ollama") String provider,
+            @RequestParam(required = false, defaultValue = "default") String chatId) {
         return getChatClient(provider)
                 .prompt()
+                .advisors(advisor -> advisor.param(ChatMemory.CONVERSATION_ID, chatId))
                 .user(message)
                 .call()
                 .content();
@@ -48,14 +52,17 @@ public class ChatController {
      *
      * @param message the user's input message
      * @param provider the AI provider to use ("ollama" or "openai")
+     * @param chatId the session identifier for chat memory
      * @return the AI-generated response as a plain string
      */
     @PostMapping
     public String chatPost(
             @RequestBody String message,
-            @RequestParam(required = false, defaultValue = "ollama") String provider) {
+            @RequestParam(required = false, defaultValue = "ollama") String provider,
+            @RequestParam(required = false, defaultValue = "default") String chatId) {
         return getChatClient(provider)
                 .prompt()
+                .advisors(advisor -> advisor.param(ChatMemory.CONVERSATION_ID, chatId))
                 .user(message)
                 .call()
                 .content();
@@ -73,9 +80,11 @@ public class ChatController {
     public String chatWithSystem(
             @RequestBody ChatRequest request,
             @RequestParam(required = false, defaultValue = "ollama") String provider) {
+        String chatId = request.chatId() != null ? request.chatId() : "default";
         return getChatClient(provider)
                 .prompt()
                 .system(request.systemPrompt())
+                .advisors(advisor -> advisor.param(ChatMemory.CONVERSATION_ID, chatId))
                 .user(request.userMessage())
                 .call()
                 .content();
@@ -84,7 +93,7 @@ public class ChatController {
     /**
      * Simple record to hold a chat request with a system prompt and user message.
      */
-    public record ChatRequest(String systemPrompt, String userMessage) {
+    public record ChatRequest(String systemPrompt, String userMessage, String chatId) {
     }
 
 }
